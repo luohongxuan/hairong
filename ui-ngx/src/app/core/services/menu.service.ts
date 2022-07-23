@@ -412,16 +412,9 @@ export class MenuService {
       },
       {
         id: guid(),
-        name: '监控',
+        name: '历史记录',
         type: 'link',
-        path: 'dashboards/d37ef440-feae-11ec-87bf-6f83197882e9',
-        icon: 'desktop_windows'
-      },
-      {
-        id: guid(),
-        name: '报警',
-        type: 'link',
-        path: 'dashboards/1debfe00-0347-11ed-9760-6be92dca11ed',
+        path: 'dashboards/f54e79a0-0a6c-11ed-8723-29871c95c35b',
         icon: 'notification_important'
       },
       {
