@@ -1,9 +1,8 @@
 import {AfterViewChecked, Component, Input, OnInit, AfterViewInit, ChangeDetectorRef, OnDestroy} from '@angular/core';
 import {Router} from '@angular/router';
 import {DeviceService} from '@core/http/device.service';
-import {map, tap} from 'rxjs/operators';
-import {type} from 'os';
-import {of, Subscription} from 'rxjs';
+import {map, take, tap} from 'rxjs/operators';
+import {Observable, of, Subscription} from 'rxjs';
 import {CustomerService} from '@core/http/customer.service';
 
 @Component({
@@ -11,7 +10,7 @@ import {CustomerService} from '@core/http/customer.service';
   templateUrl: './h2mc-alarm.component.html',
   styleUrls: ['./h2mc-alarm.component.scss']
 })
-export class H2mcAlarmComponent implements OnInit, AfterViewChecked, OnDestroy {
+export class H2mcAlarmComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
 
 
   @Input() entityList: any;
@@ -23,6 +22,7 @@ export class H2mcAlarmComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   subscriptList: Subscription[] = [];
 
+
   constructor(private router: Router,
               private deviceService: DeviceService,
               private customerService: CustomerService,
@@ -30,22 +30,31 @@ export class H2mcAlarmComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   ngOnInit(): void {
-    // setInterval(() => {
-    //   // require view to be updated
-    //   this.ref.markForCheck();
-    // }, 1000);
   }
 
+  ngAfterViewInit(): void {
+    console.log('========ngAfterViewInit===========');
+    setTimeout(() => {
+      console.log("刷新界面")
+      this.ref.markForCheck()
+    },1000)
+  }
 
   ngAfterViewChecked(): void {
+    console.log('========ngAfterViewChecked===========');
     if (typeof this.entityList !== 'undefined') {
       this.entityList = JSON.parse(JSON.stringify(this.entityList));
       this.getCustomer();
 
-      setTimeout(()=>{
-        for (let subscript of this.subscriptList)
-          subscript.unsubscribe()
-      }, 1000*this.entityList.length)
+      // setTimeout(() => {
+      //   for (let subscript of this.subscriptList) {
+      //     subscript.unsubscribe();
+      //   }
+      // }, 1000 * this.entityList.length);
+      //
+      // setTimeout(() => {
+      //   this.ref.markForCheck()
+      // },5000)
     }
   }
 
@@ -55,29 +64,42 @@ export class H2mcAlarmComponent implements OnInit, AfterViewChecked, OnDestroy {
 
 
   getCustomer(): void {
+    console.time('Time1')
     for (let i = 0; i < this.entityList.length; i++) {
       let subscriber = this.deviceService.getDeviceInfo(this.entityList[i].entityId)
         .pipe(
+          take(1),
           map((data) => data.customerId.id)
-        ).subscribe((data) => {
-          this.entityList[i].customerId = data;
-          this.getCustomerDetail(i, data);
-          // console.log(`${i}-----------${JSON.stringify(this.entityList[i], null,2)}`)
-          this.ref.markForCheck();
+        ).subscribe({
+          next: (data) => {
+            // console.log(`${i}----进入`);
+            this.entityList[i].customerId = data;
+            this.getCustomerDetail(i, data);
+            // console.log(`${i}-----------${JSON.stringify(this.entityList[i], null,2)}`)
+            // this.ref.markForCheck();
+          },
+          error: null,
+          complete: () => {
+            console.log('结束了');
+          }
         });
-      this.subscriptList.push(subscriber);
+      // this.subscriptList.push(subscriber);
     }
+    console.timeEnd('Time1')
   }
 
   getCustomerDetail(index: number, customerId: string): void {
-    let subscriber = this.customerService.getCustomer(customerId).subscribe(
-      (customer) => {
-        this.entityList[index].address = customer.address;
-        this.entityList[index].customerName = customer.name;
-        this.entityList[index].customerPhone = customer.phone;
-      }
-    );
-    this.subscriptList.push(subscriber);
+    let subscriber = this.customerService.getCustomer(customerId)
+      // .pipe(take(1))
+      .subscribe(
+        (customer) => {
+          this.entityList[index].address = customer.address;
+          this.entityList[index].customerName = customer.name;
+          this.entityList[index].customerPhone = customer.phone;
+        }
+      );
+
+    // this.subscriptList.push(subscriber);
   }
 
   goDeviceDetail(entityId: string): void {
@@ -90,5 +112,6 @@ export class H2mcAlarmComponent implements OnInit, AfterViewChecked, OnDestroy {
     const url = '/customers/' + customerId;
     this.router.navigate([url]);
   }
+
 
 }

@@ -1,12 +1,17 @@
 .entity-card {
   max-width: 10rem;
   margin: 1rem 1rem auto;
+  padding: 10px;
+  text-align: center;
 }
 
 .entity-card-content {
-  p{
-    font-size: 1rem;
-  }
+  padding: 0 0;
+}
+
+.entity-card-img{
+  width: 80%;
+  margin: 0;
 }
 
 .card-wrap {
@@ -21,6 +26,11 @@
   min-width: 300px;
   height: 210px;
   margin: 10px;
+  text-align: left;
+}
+
+.customer-info{
+  font-size: 0.8rem;
 }
 
 #header {
